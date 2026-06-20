@@ -2,6 +2,8 @@
 
 A simple REST API to shorten URLs, built with **Flask** and **SQLite**.
 
+🌐 **Live Demo:** https://web-production-46279.up.railway.app
+
 ## Features
 
 - ✅ Shorten any URL
@@ -9,12 +11,13 @@ A simple REST API to shorten URLs, built with **Flask** and **SQLite**.
 - ✅ Auto-redirect to original URL
 - ✅ Click tracking & stats
 - ✅ Duplicate URL detection
+- ✅ QR Code generator
 
 ## Getting Started
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/url-shortener.git
+git clone https://github.com/aokway/url-shortener.git
 cd url-shortener
 ```
 
@@ -41,6 +44,8 @@ API is now running at `http://localhost:5000`
 
 ## API Endpoints
 
+Base URL: `https://web-production-46279.up.railway.app`
+
 ### `GET /`
 Returns available endpoints.
 
@@ -53,7 +58,7 @@ Shorten a URL.
 ```json
 {
   "url": "https://www.google.com",
-  "alias": "google"  // optional custom alias
+  "alias": "google"
 }
 ```
 
@@ -63,7 +68,7 @@ Shorten a URL.
   "message": "URL shortened successfully",
   "data": {
     "short_code": "google",
-    "short_url": "http://localhost:5000/google",
+    "short_url": "https://web-production-46279.up.railway.app/google",
     "original_url": "https://www.google.com",
     "clicks": 0,
     "created_at": "2024-01-01T00:00:00"
@@ -81,17 +86,10 @@ Redirects to the original URL and increments click count.
 ### `GET /stats/<short_code>`
 Get stats for a shortened URL.
 
-**Response:**
-```json
-{
-  "data": {
-    "short_code": "google",
-    "original_url": "https://www.google.com",
-    "clicks": 42,
-    "created_at": "2024-01-01T00:00:00"
-  }
-}
-```
+---
+
+### `GET /qr/<short_code>`
+Generate a QR Code image for the shortened URL.
 
 ---
 
@@ -111,6 +109,7 @@ Delete a shortened URL.
 - **Flask** - Web framework
 - **SQLAlchemy** - ORM for database
 - **SQLite** - Database
+- **Railway** - Deployment platform
 
 ## License
 
