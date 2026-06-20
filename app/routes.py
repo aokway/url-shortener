@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, redirect, send_file, render_template
+from flask import Blueprint, request, jsonify, redirect, send_file, render_template, current_app
 from . import db
 from .models import URL
 import random
@@ -17,6 +17,13 @@ def generate_short_code(length=6):
             return code
 
 
+def check_api_key():
+    api_key = request.headers.get('X-API-Key')
+    if api_key != current_app.config['API_KEY']:
+        return False
+    return True
+
+
 @main.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
@@ -27,17 +34,21 @@ def api_info():
     return jsonify({
         'message': 'URL Shortener API',
         'endpoints': {
-            'POST /shorten': 'Shorten a URL',
+            'POST /shorten': 'Shorten a URL (requires API key)',
             'GET /<short_code>': 'Redirect to original URL',
             'GET /stats/<short_code>': 'Get URL stats',
             'GET /qr/<short_code>': 'Generate QR Code',
-            'GET /all': 'Get all shortened URLs'
+            'GET /all': 'Get all shortened URLs',
+            'DELETE /<short_code>': 'Delete a URL (requires API key)'
         }
     })
 
 
 @main.route('/shorten', methods=['POST'])
 def shorten_url():
+    if not check_api_key():
+        return jsonify({'error': 'Invalid or missing API key'}), 401
+
     data = request.get_json()
 
     if not data or 'url' not in data:
@@ -93,7 +104,7 @@ def generate_qr(short_code):
     if not url:
         return jsonify({'error': 'Short URL not found'}), 404
 
-    qr = qrcode.make(f"http://127.0.0.1:5000/{short_code}")
+    qr = qrcode.make(f"https://shortway-links.up.railway.app/{short_code}")
     img_io = io.BytesIO()
     qr.save(img_io, 'PNG')
     img_io.seek(0)
@@ -126,6 +137,9 @@ def redirect_url(short_code):
 
 @main.route('/<short_code>', methods=['DELETE'])
 def delete_url(short_code):
+    if not check_api_key():
+        return jsonify({'error': 'Invalid or missing API key'}), 401
+
     url = URL.query.filter_by(short_code=short_code).first()
 
     if not url:

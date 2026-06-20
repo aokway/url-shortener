@@ -13,6 +13,7 @@ def create_app():
     
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['API_KEY'] = os.environ.get('API_KEY', 'dev-secret-key')
 
     db.init_app(app)
 

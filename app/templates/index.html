@@ -367,6 +367,7 @@
 
 <script>
   const BASE_URL = window.location.origin;
+  const API_KEY = 'dev-secret-key';
   let lastShortCode = '';
 
   async function handleShorten() {
@@ -388,7 +389,10 @@
 
       const res = await fetch('/shorten', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-API-Key': API_KEY
+        },
         body: JSON.stringify(body)
       });
 
@@ -496,7 +500,10 @@
   async function deleteUrl(code) {
     if (!confirm('Delete this link?')) return;
     try {
-      await fetch('/' + code, { method: 'DELETE' });
+      await fetch('/' + code, { 
+        method: 'DELETE',
+        headers: { 'X-API-Key': API_KEY }
+      });
       showToast('Link deleted');
       loadStats();
       loadLinks();
