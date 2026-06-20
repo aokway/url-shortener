@@ -2,7 +2,7 @@
 
 A URL shortener web app with API, built with **Flask** and **SQLite**.
 
-🌐 **Live Demo:** https://web-production-46279.up.railway.app
+🌐 **Live Demo:** https://shortway-links.up.railway.app
 
 ## Features
 
