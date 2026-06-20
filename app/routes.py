@@ -1,8 +1,10 @@
-from flask import Blueprint, request, jsonify, redirect
+from flask import Blueprint, request, jsonify, redirect, send_file
 from . import db
 from .models import URL
 import random
 import string
+import qrcode
+import io
 
 main = Blueprint('main', __name__)
 
@@ -24,6 +26,7 @@ def index():
             'POST /shorten': 'Shorten a URL',
             'GET /<short_code>': 'Redirect to original URL',
             'GET /stats/<short_code>': 'Get URL stats',
+            'GET /qr/<short_code>': 'Generate QR Code',
             'GET /all': 'Get all shortened URLs'
         }
     })
@@ -38,11 +41,9 @@ def shorten_url():
 
     original_url = data['url']
 
-    # Validate URL format
     if not original_url.startswith(('http://', 'https://')):
         return jsonify({'error': 'URL must start with http:// or https://'}), 400
 
-    # Check if URL already shortened
     existing = URL.query.filter_by(original_url=original_url).first()
     if existing:
         return jsonify({
@@ -50,7 +51,6 @@ def shorten_url():
             'data': existing.to_dict()
         }), 200
 
-    # Use custom alias or generate one
     custom_alias = data.get('alias')
     if custom_alias:
         if URL.query.filter_by(short_code=custom_alias).first():
@@ -93,6 +93,21 @@ def get_stats(short_code):
         'message': 'URL stats',
         'data': url.to_dict()
     })
+
+
+@main.route('/qr/<short_code>', methods=['GET'])
+def generate_qr(short_code):
+    url = URL.query.filter_by(short_code=short_code).first()
+
+    if not url:
+        return jsonify({'error': 'Short URL not found'}), 404
+
+    qr = qrcode.make(f"http://127.0.0.1:5000/{short_code}")
+    img_io = io.BytesIO()
+    qr.save(img_io, 'PNG')
+    img_io.seek(0)
+
+    return send_file(img_io, mimetype='image/png')
 
 
 @main.route('/all', methods=['GET'])
