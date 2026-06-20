@@ -1,11 +1,12 @@
-# 🔗 URL Shortener API
+# 🔗 URL Shortener
 
-A simple REST API to shorten URLs, built with **Flask** and **SQLite**.
+A URL shortener web app with API, built with **Flask** and **SQLite**.
 
 🌐 **Live Demo:** https://web-production-46279.up.railway.app
 
 ## Features
 
+- ✅ Web UI — no Postman needed!
 - ✅ Shorten any URL
 - ✅ Custom alias support
 - ✅ Auto-redirect to original URL
@@ -38,7 +39,7 @@ pip install -r requirements.txt
 python run.py
 ```
 
-API is now running at `http://localhost:5000`
+Open http://localhost:5000 in your browser.
 
 ---
 
@@ -47,7 +48,10 @@ API is now running at `http://localhost:5000`
 Base URL: `https://web-production-46279.up.railway.app`
 
 ### `GET /`
-Returns available endpoints.
+Returns the web UI homepage.
+
+### `GET /api`
+Returns available API endpoints.
 
 ---
 
@@ -105,11 +109,11 @@ Delete a shortened URL.
 
 ## Tech Stack
 
-- **Python** - Programming language
-- **Flask** - Web framework
-- **SQLAlchemy** - ORM for database
-- **SQLite** - Database
-- **Railway** - Deployment platform
+- **Python** — Programming language
+- **Flask** — Web framework
+- **SQLAlchemy** — ORM for database
+- **SQLite** — Database
+- **Railway** — Deployment platform
 
 ## License
 
