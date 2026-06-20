@@ -1,5 +1,4 @@
-from flask import Blueprint, request, jsonify, redirect, send_file
-from flask import render_template
+from flask import Blueprint, request, jsonify, redirect, send_file, render_template
 from . import db
 from .models import URL
 import random
@@ -11,7 +10,6 @@ main = Blueprint('main', __name__)
 
 
 def generate_short_code(length=6):
-    """Generate a random short code."""
     chars = string.ascii_letters + string.digits
     while True:
         code = ''.join(random.choices(chars, k=length))
@@ -21,6 +19,11 @@ def generate_short_code(length=6):
 
 @main.route('/', methods=['GET'])
 def index():
+    return render_template('index.html')
+
+
+@main.route('/api', methods=['GET'])
+def api_info():
     return jsonify({
         'message': 'URL Shortener API',
         'endpoints': {
@@ -31,9 +34,7 @@ def index():
             'GET /all': 'Get all shortened URLs'
         }
     })
-@main.route('/home', methods=['GET'])
-def home():
-    return render_template('index.html')
+
 
 @main.route('/shorten', methods=['POST'])
 def shorten_url():
@@ -72,19 +73,6 @@ def shorten_url():
     }), 201
 
 
-@main.route('/<short_code>', methods=['GET'])
-def redirect_url(short_code):
-    url = URL.query.filter_by(short_code=short_code).first()
-
-    if not url:
-        return jsonify({'error': 'Short URL not found'}), 404
-
-    url.clicks += 1
-    db.session.commit()
-
-    return redirect(url.original_url)
-
-
 @main.route('/stats/<short_code>', methods=['GET'])
 def get_stats(short_code):
     url = URL.query.filter_by(short_code=short_code).first()
@@ -121,6 +109,19 @@ def get_all_urls():
         'count': len(urls),
         'data': [url.to_dict() for url in urls]
     })
+
+
+@main.route('/<short_code>', methods=['GET'])
+def redirect_url(short_code):
+    url = URL.query.filter_by(short_code=short_code).first()
+
+    if not url:
+        return jsonify({'error': 'Short URL not found'}), 404
+
+    url.clicks += 1
+    db.session.commit()
+
+    return redirect(url.original_url)
 
 
 @main.route('/<short_code>', methods=['DELETE'])
