@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify, redirect, send_file
+from flask import render_template
 from . import db
 from .models import URL
 import random
@@ -30,7 +31,9 @@ def index():
             'GET /all': 'Get all shortened URLs'
         }
     })
-
+@main.route('/home', methods=['GET'])
+def home():
+    return render_template('index.html')
 
 @main.route('/shorten', methods=['POST'])
 def shorten_url():
