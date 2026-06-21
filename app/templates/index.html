@@ -1,6 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>URL Shortener</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 620px;
+      margin: 0 auto;
+      padding: 3rem 1rem 2rem;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 6px;
+    }
+
+    .header p {
+      font-size: 15px;
+      color: #888;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      height: 42px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 0 14px;
+      font-size: 14px;
+      background: #fafafa;
+      color: #1a1a1a;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #1a1a1a;
+      background: #fff;
+    }
+
+    .btn-primary {
+      height: 42px;
+      padding: 0 22px;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.2s;
+    }
+
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .alias-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .alias-row label {
+      font-size: 13px;
+      color: #888;
+      white-space: nowrap;
+    }
+
+    .alias-row input {
+      flex: 1;
+      height: 36px;
+      font-size: 13px;
+    }
+
+    .result-card {
+      background: #f9f9f9;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .result-label {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    .result-link {
+      font-size: 15px;
+      font-weight: 500;
+      color: #0066cc;
+      word-break: break-all;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-sm {
+      height: 32px;
+      padding: 0 14px;
+      font-size: 13px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      background: #fff;
+      color: #1a1a1a;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.15s;
+    }
+
+    .btn-sm:hover { background: #f0f0f0; }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1a1a;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: none;
+      z-index: 999;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+
+    .stat-card {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .stat-num {
+      font-size: 24px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+
+    .url-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .url-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #fafafa;
+      border-radius: 8px;
+      border: 1px solid #f0f0f0;
+    }
+
+    .url-code {
+      font-size: 13px;
+      font-weight: 600;
+      color: #0066cc;
+      min-width: 80px;
+    }
+
+    .url-original {
+      font-size: 13px;
+      color: #888;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .url-clicks {
+      font-size: 12px;
+      color: #aaa;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .url-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .icon-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #aaa;
+      font-size: 15px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .icon-btn:hover { background: #f0f0f0; color: #1a1a1a; }
+    .icon-btn.danger:hover { background: #fff0f0; color: #cc0000; }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    .qr-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .qr-modal.open { display: flex; }
+
+    .qr-box {
+      background: #fff;
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      max-width: 300px;
+      width: 90%;
+    }
+
+    .qr-box h3 { font-size: 16px; margin-bottom: 1rem; color: #1a1a1a; }
+    .qr-box img { width: 200px; height: 200px; }
+    .qr-close { margin-top: 1rem; width: 100%; }
+
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: repeat(3, 1fr); }
+      .input-row { flex-direction: column; }
+      .btn-primary { height: 42px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1><i class="ti ti-link"></i> URL Shortener</h1>
+    <p>Shorten your links, generate QR codes, track clicks</p>
+  </div>
+
+  <div class="card">
+    <div class="input-row">
+      <input type="text" id="urlInput" placeholder="https://your-long-url.com/here" />
+      <button class="btn-primary" onclick="handleShorten()" id="shortenBtn">Shorten</button>
+    </div>
+    <div class="alias-row">
+      <label><i class="ti ti-tag"></i> Custom alias (optional)</label>
+      <input type="text" id="aliasInput" placeholder="my-link" />
+    </div>
+
+    <div class="result-card" id="resultCard">
+      <div class="result-label">Your short link</div>
+      <div class="result-link" id="resultLink"></div>
+      <div class="result-actions">
+        <button class="btn-sm" onclick="copyLink()"><i class="ti ti-copy"></i> Copy</button>
+        <button class="btn-sm" onclick="showQR()"><i class="ti ti-qrcode"></i> QR Code</button>
+        <button class="btn-sm" onclick="openResult()"><i class="ti ti-external-link"></i> Open</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-num" id="totalLinks">-</div>
+      <div class="stat-label">Total links</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="totalClicks">-</div>
+      <div class="stat-label">Total clicks</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="todayLinks">-</div>
+      <div class="stat-label">Today</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Recent links</div>
+    <div class="url-list" id="urlList">
+      <div class="empty-state">No links yet. Shorten your first URL above!</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="qr-modal" id="qrModal" onclick="closeQR(event)">
+  <div class="qr-box">
+    <h3>QR Code</h3>
+    <img id="qrImg" src="" alt="QR Code" />
+    <button class="btn-primary qr-close" onclick="document.getElementById('qrModal').classList.remove('open')">Close</button>
+  </div>
+</div>
+
 <script>
   const BASE_URL = window.location.origin;
-  const API_KEY = 'dev-secret-key';
+  // Pastikan API_KEY ini sama persis dengan yang ada di Railway Variable
+  const API_KEY = 'aokway-secret-2026'; 
   let lastShortCode = '';
 
   async function handleShorten() {
@@ -24,7 +392,7 @@
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'X-API-Key': API_KEY
+          'X-API-Key': API_KEY // Header dikirim di sini
         },
         body: JSON.stringify(body)
       });
@@ -133,14 +501,22 @@
   async function deleteUrl(code) {
     if (!confirm('Delete this link?')) return;
     try {
-      await fetch('/' + code, { 
+      // Header API Key ditambahkan agar sinkron dengan Backend
+      const res = await fetch('/' + code, { 
         method: 'DELETE',
-        headers: { 'X-API-Key': API_KEY }
+        headers: { 'X-API-Key': API_KEY } 
       });
-      showToast('Link deleted');
-      loadStats();
-      loadLinks();
-    } catch (e) {}
+      
+      if (res.ok) {
+        showToast('Link deleted');
+        loadStats();
+        loadLinks();
+      } else {
+        showToast('Error: Unauthorized');
+      }
+    } catch (e) {
+      showToast('Error connecting to server');
+    }
   }
 
   function showToast(msg) {
@@ -157,3 +533,5 @@
   loadStats();
   loadLinks();
 </script>
+</body>
+</html>
