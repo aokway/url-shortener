@@ -17,11 +17,17 @@ def generate_short_code(length=6):
             return code
 
 
+# === DI SINI PENAMBAHAN LOGIKANYA ===
 def check_api_key():
+    # Penambahan 1: Loloskan otomatis jika request hapus/tambah berasal dari frontend browser lu sendiri
+    if request.referrer and request.referrer.startswith(request.host_url):
+        return True
+        
     api_key = request.headers.get('X-API-Key')
     if api_key != current_app.config['API_KEY']:
         return False
     return True
+# ===================================
 
 
 @main.route('/', methods=['GET'])
