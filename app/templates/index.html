@@ -367,50 +367,39 @@
 
 <script>
   const BASE_URL = window.location.origin;
-  const API_KEY = 'aokway-secret-2026';
   let lastShortCode = '';
 
   async function handleShorten() {
     const url = document.getElementById('urlInput').value.trim();
     const alias = document.getElementById('aliasInput').value.trim();
-
     if (!url) { showToast('Please enter a URL'); return; }
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       showToast('URL must start with http:// or https://'); return;
     }
-
     const btn = document.getElementById('shortenBtn');
     btn.disabled = true;
     btn.textContent = 'Shortening...';
-
     try {
       const body = { url };
       if (alias) body.alias = alias;
-
       const res = await fetch('/shorten', {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(body)
       });
-
       const data = await res.json();
-
       if (!res.ok) {
         showToast(data.error || 'Something went wrong');
         return;
       }
-
       lastShortCode = data.data.short_code;
       const shortUrl = BASE_URL + '/' + lastShortCode;
-
       document.getElementById('resultLink').textContent = shortUrl;
       document.getElementById('resultCard').style.display = 'block';
       document.getElementById('urlInput').value = '';
       document.getElementById('aliasInput').value = '';
-
       showToast('Link shortened!');
       loadStats();
       loadLinks();
@@ -463,12 +452,10 @@
       const data = await res.json();
       const urls = data.data || [];
       const list = document.getElementById('urlList');
-
       if (!urls.length) {
         list.innerHTML = '<div class="empty-state">No links yet. Shorten your first URL above!</div>';
         return;
       }
-
       list.innerHTML = urls.map(u => {
         const domain = new URL(u.original_url).hostname;
         return `
@@ -501,8 +488,7 @@
     if (!confirm('Delete this link?')) return;
     try {
       await fetch('/' + code, { 
-        method: 'DELETE',
-        headers: { 'X-API-Key': API_KEY }
+        method: 'DELETE'
       });
       showToast('Link deleted');
       loadStats();

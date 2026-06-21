@@ -8,7 +8,6 @@ import io
 
 main = Blueprint('main', __name__)
 
-
 def generate_short_code(length=6):
     chars = string.ascii_letters + string.digits
     while True:
@@ -16,33 +15,34 @@ def generate_short_code(length=6):
         if not URL.query.filter_by(short_code=code).first():
             return code
 
-
 def check_api_key():
+    # Cek apakah request datang dari frontend web kita sendiri (Browser)
+    if request.referrer and request.referrer.startswith(request.host_url):
+        return True
+        
+    # Jika request dari luar (Postman/Script pihak ketiga), wajib cek API Key asli
     api_key = request.headers.get('X-API-Key')
     if api_key != current_app.config['API_KEY']:
         return False
     return True
 
-
 @main.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
-
 
 @main.route('/api', methods=['GET'])
 def api_info():
     return jsonify({
         'message': 'URL Shortener API',
         'endpoints': {
-            'POST /shorten': 'Shorten a URL (requires API key)',
+            'POST /shorten': 'Shorten a URL (requires API key if external)',
             'GET /<short_code>': 'Redirect to original URL',
             'GET /stats/<short_code>': 'Get URL stats',
             'GET /qr/<short_code>': 'Generate QR Code',
             'GET /all': 'Get all shortened URLs',
-            'DELETE /<short_code>': 'Delete a URL (requires API key)'
+            'DELETE /<short_code>': 'Delete a URL (requires API key if external)'
         }
     })
-
 
 @main.route('/shorten', methods=['POST'])
 def shorten_url():
@@ -50,12 +50,10 @@ def shorten_url():
         return jsonify({'error': 'Invalid or missing API key'}), 401
 
     data = request.get_json()
-
     if not data or 'url' not in data:
         return jsonify({'error': 'Please provide a URL'}), 400
 
     original_url = data['url']
-
     if not original_url.startswith(('http://', 'https://')):
         return jsonify({'error': 'URL must start with http:// or https://'}), 400
 
@@ -83,24 +81,19 @@ def shorten_url():
         'data': new_url.to_dict()
     }), 201
 
-
 @main.route('/stats/<short_code>', methods=['GET'])
 def get_stats(short_code):
     url = URL.query.filter_by(short_code=short_code).first()
-
     if not url:
         return jsonify({'error': 'Short URL not found'}), 404
-
     return jsonify({
         'message': 'URL stats',
         'data': url.to_dict()
     })
 
-
 @main.route('/qr/<short_code>', methods=['GET'])
 def generate_qr(short_code):
     url = URL.query.filter_by(short_code=short_code).first()
-
     if not url:
         return jsonify({'error': 'Short URL not found'}), 404
 
@@ -108,9 +101,7 @@ def generate_qr(short_code):
     img_io = io.BytesIO()
     qr.save(img_io, 'PNG')
     img_io.seek(0)
-
     return send_file(img_io, mimetype='image/png')
-
 
 @main.route('/all', methods=['GET'])
 def get_all_urls():
@@ -121,19 +112,15 @@ def get_all_urls():
         'data': [url.to_dict() for url in urls]
     })
 
-
 @main.route('/<short_code>', methods=['GET'])
 def redirect_url(short_code):
     url = URL.query.filter_by(short_code=short_code).first()
-
     if not url:
         return jsonify({'error': 'Short URL not found'}), 404
 
     url.clicks += 1
     db.session.commit()
-
     return redirect(url.original_url)
-
 
 @main.route('/<short_code>', methods=['DELETE'])
 def delete_url(short_code):
@@ -141,11 +128,9 @@ def delete_url(short_code):
         return jsonify({'error': 'Invalid or missing API key'}), 401
 
     url = URL.query.filter_by(short_code=short_code).first()
-
     if not url:
         return jsonify({'error': 'Short URL not found'}), 404
 
     db.session.delete(url)
     db.session.commit()
-
     return jsonify({'message': f'Short URL "{short_code}" deleted successfully'})
