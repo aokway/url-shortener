@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, redirect, send_file, render_template, current_app
+from flask import Blueprint, request, jsonify, redirect, send_file, current_app
 from . import db
 from .models import URL
 import random
@@ -10,6 +10,7 @@ main = Blueprint('main', __name__)
 
 
 def generate_short_code(length=6):
+    """Generate a random short code."""
     chars = string.ascii_letters + string.digits
     while True:
         code = ''.join(random.choices(chars, k=length))
@@ -17,22 +18,22 @@ def generate_short_code(length=6):
             return code
 
 
-# === DI SINI PENAMBAHAN LOGIKANYA ===
+# === API KEY TETAP AKTIF DAN AMAN ===
 def check_api_key():
-    # Penambahan 1: Loloskan otomatis jika request hapus/tambah berasal dari frontend browser lu sendiri
+    # Loloskan otomatis jika request hapus/tambah berasal dari frontend browser lu sendiri
     if request.referrer and request.referrer.startswith(request.host_url):
         return True
         
     api_key = request.headers.get('X-API-Key')
-    if api_key != current_app.config['API_KEY']:
+    if api_key != current_app.config.get('API_KEY', 'dev-secret-key'):
         return False
     return True
-# ===================================
 
 
+# === PERBAIKAN UTAMA: Memanggil index.html dari folder static agar tidak BLANK ===
 @main.route('/', methods=['GET'])
 def index():
-    return render_template('index.html')
+    return current_app.send_static_file('index.html')
 
 
 @main.route('/api', methods=['GET'])
@@ -90,6 +91,19 @@ def shorten_url():
     }), 201
 
 
+@main.route('/<short_code>', methods=['GET'])
+def redirect_url(short_code):
+    url = URL.query.filter_by(short_code=short_code).first()
+
+    if not url:
+        return jsonify({'error': 'Short URL not found'}), 404
+
+    url.clicks += 1
+    db.session.commit()
+
+    return redirect(url.original_url)
+
+
 @main.route('/stats/<short_code>', methods=['GET'])
 def get_stats(short_code):
     url = URL.query.filter_by(short_code=short_code).first()
@@ -110,7 +124,8 @@ def generate_qr(short_code):
     if not url:
         return jsonify({'error': 'Short URL not found'}), 404
 
-    qr = qrcode.make(f"https://shortway-links.up.railway.app/{short_code}")
+    current_domain = request.host_url.rstrip('/')
+    qr = qrcode.make(f"{current_domain}/{short_code}")
     img_io = io.BytesIO()
     qr.save(img_io, 'PNG')
     img_io.seek(0)
@@ -126,19 +141,6 @@ def get_all_urls():
         'count': len(urls),
         'data': [url.to_dict() for url in urls]
     })
-
-
-@main.route('/<short_code>', methods=['GET'])
-def redirect_url(short_code):
-    url = URL.query.filter_by(short_code=short_code).first()
-
-    if not url:
-        return jsonify({'error': 'Short URL not found'}), 404
-
-    url.clicks += 1
-    db.session.commit()
-
-    return redirect(url.original_url)
 
 
 @main.route('/<short_code>', methods=['DELETE'])
